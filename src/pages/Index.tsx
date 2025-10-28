@@ -113,12 +113,23 @@ export default function Index() {
             Telegram Finder
           </h1>
           
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-6">
             Быстрый поиск пользователей Telegram по номеру телефона или username
           </p>
+
+          <Button
+            onClick={() => {
+              const formElement = document.getElementById('search-form');
+              formElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }}
+            className="bg-gradient-to-r from-primary via-secondary to-accent hover:opacity-90 text-white font-bold px-8 py-6 text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+          >
+            <Icon name="Rocket" size={24} className="mr-2" />
+            Начать пользоваться
+          </Button>
         </div>
 
-        <Card className="p-6 md:p-10 shadow-2xl backdrop-blur-sm bg-card/95 border-2 animate-scale-in" style={{ animationDelay: '0.1s' }}>
+        <Card id="search-form" className="p-6 md:p-10 shadow-2xl backdrop-blur-sm bg-card/95 border-2 animate-scale-in" style={{ animationDelay: '0.1s' }}>
           <div className="space-y-6">
             <div className="space-y-3">
               <label className="text-sm font-semibold text-foreground flex items-center gap-2">
