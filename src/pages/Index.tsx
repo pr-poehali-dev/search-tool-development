@@ -71,7 +71,6 @@ export default function Index() {
     }
 
     setIsSearching(true);
-    setSearchResults(null);
     
     try {
       const response = await fetch('https://functions.poehali.dev/3f7cbc30-5359-4fd6-8f27-b0aff8e54dd6', {
