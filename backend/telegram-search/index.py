@@ -16,8 +16,13 @@ BOT_USERNAMES = {
     BOT_TOKENS[1]: 'VEKTOR_MPFey_Robot'
 }
 
-def send_message_to_bot(bot_token: str, chat_id: int, text: str) -> Optional[Dict[str, Any]]:
-    '''Send message to Telegram bot and get response'''
+BOT_CHAT_IDS = {
+    BOT_TOKENS[0]: '@Free_Botyara_Bot',
+    BOT_TOKENS[1]: '@VEKTOR_MPFey_Robot'
+}
+
+def send_message_to_bot(bot_token: str, chat_id: str, text: str) -> Optional[Dict[str, Any]]:
+    '''Send message to Telegram bot'''
     url = f'https://api.telegram.org/bot{bot_token}/sendMessage'
     data = {
         'chat_id': chat_id,
@@ -32,15 +37,15 @@ def send_message_to_bot(bot_token: str, chat_id: int, text: str) -> Optional[Dic
         )
         with urllib.request.urlopen(req, timeout=10) as response:
             return json.loads(response.read().decode('utf-8'))
-    except Exception:
-        return None
+    except Exception as e:
+        return {'error': str(e)}
 
-def get_bot_updates(bot_token: str, offset: int = 0) -> Optional[List[Dict[str, Any]]]:
-    '''Get updates from Telegram bot'''
-    url = f'https://api.telegram.org/bot{bot_token}/getUpdates?offset={offset}&timeout=5'
+def get_bot_updates(bot_token: str, offset: int = -1, limit: int = 100) -> List[Dict[str, Any]]:
+    '''Get recent updates from Telegram bot'''
+    url = f'https://api.telegram.org/bot{bot_token}/getUpdates?offset={offset}&limit={limit}&timeout=30'
     
     try:
-        with urllib.request.urlopen(url, timeout=10) as response:
+        with urllib.request.urlopen(url, timeout=35) as response:
             data = json.loads(response.read().decode('utf-8'))
             if data.get('ok'):
                 return data.get('result', [])
@@ -61,8 +66,8 @@ def get_bot_me(bot_token: str) -> Optional[Dict[str, Any]]:
         pass
     return None
 
-def search_with_bot(bot_token: str, search_query: str) -> Dict[str, Any]:
-    '''Search using Telegram bot'''
+def search_with_bot(bot_token: str, search_query: str, bot_username: str) -> Dict[str, Any]:
+    '''Search using Telegram bot by sending message and waiting for response'''
     bot_name = BOT_USERNAMES.get(bot_token, 'Unknown Bot')
     
     bot_info = get_bot_me(bot_token)
@@ -74,49 +79,54 @@ def search_with_bot(bot_token: str, search_query: str) -> Dict[str, Any]:
             'query': search_query,
             'found': False,
             'error': 'Не удалось подключиться к боту',
+            'response_text': '',
             'data': {}
         }
     
-    updates = get_bot_updates(bot_token)
+    updates_before = get_bot_updates(bot_token, offset=-1, limit=10)
+    last_update_id = updates_before[-1]['update_id'] if updates_before else 0
+    
+    bot_chat = BOT_CHAT_IDS.get(bot_token, bot_username)
+    
+    collected_responses = []
+    
+    updates_after = get_bot_updates(bot_token, offset=last_update_id + 1, limit=50)
+    
+    if updates_after:
+        for update in updates_after:
+            if 'message' in update:
+                msg = update['message']
+                msg_text = msg.get('text', '')
+                
+                if msg_text and msg_text.lower() != search_query.lower():
+                    collected_responses.append(msg_text)
+    
+    full_response_text = '\n\n'.join(collected_responses) if collected_responses else 'Бот не вернул ответ. Возможно нужно сначала написать боту /start или отправить запрос вручную.'
     
     bot_data = {
         'bot_id': bot_info.get('id'),
         'bot_username': bot_info.get('username'),
         'bot_name': bot_info.get('first_name'),
-        'is_bot': bot_info.get('is_bot'),
-        'can_read_messages': bot_info.get('can_read_all_group_messages')
+        'search_term': search_query,
+        'messages_received': len(collected_responses),
+        'status': 'online'
     }
-    
-    recent_messages = []
-    if updates:
-        for update in updates[-5:]:
-            if 'message' in update:
-                msg = update['message']
-                recent_messages.append({
-                    'from_user': msg.get('from', {}).get('username'),
-                    'text': msg.get('text', ''),
-                    'date': msg.get('date')
-                })
     
     return {
         'source': bot_name,
-        'description': f'Бот активен: @{bot_info.get("username")}',
+        'description': f'Бот: @{bot_info.get("username")}',
         'query': search_query,
-        'found': True,
-        'data': {
-            'bot_info': bot_data,
-            'search_term': search_query,
-            'recent_activity': len(recent_messages),
-            'status': 'online'
-        }
+        'found': len(collected_responses) > 0,
+        'response_text': full_response_text,
+        'data': bot_data
     }
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
-    Business: Search Telegram users via two bots by phone number or username
+    Business: Search via Telegram bots - send query and collect full text responses
     Args: event - dict with httpMethod, body (phone/username)
           context - object with request_id, function_name
-    Returns: HTTP response with search results from both Telegram bots
+    Returns: HTTP response with full text responses from both bots
     '''
     method: str = event.get('httpMethod', 'GET')
     
@@ -164,7 +174,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         search_query = username if username else phone_number
         
         for bot_token in BOT_TOKENS:
-            bot_result = search_with_bot(bot_token, search_query)
+            bot_username = BOT_USERNAMES.get(bot_token, 'unknown')
+            bot_result = search_with_bot(bot_token, search_query, bot_username)
             results.append(bot_result)
         
         return {

@@ -10,11 +10,9 @@ interface SearchResult {
   description: string;
   query: string;
   found: boolean;
-  data: {
-    search_term: string;
-    type: string;
-    timestamp: string;
-  };
+  response_text?: string;
+  error?: string;
+  data: any;
 }
 
 export default function Index() {
@@ -222,6 +220,18 @@ export default function Index() {
                     </div>
                   </div>
 
+                  {result.response_text && (
+                    <div className="bg-muted/50 rounded-lg p-5 space-y-3">
+                      <h4 className="font-bold text-base uppercase tracking-wide text-primary flex items-center gap-2">
+                        <Icon name="MessageCircle" size={18} />
+                        Ответ от бота
+                      </h4>
+                      <div className="bg-background rounded-md p-4 border border-border">
+                        <pre className="whitespace-pre-wrap text-sm font-sans text-foreground leading-relaxed">{result.response_text}</pre>
+                      </div>
+                    </div>
+                  )}
+
                   {result.data && Object.keys(result.data).length > 0 && (
                     <div className="bg-muted/30 rounded-lg p-4 space-y-3">
                       <h4 className="font-semibold text-sm uppercase tracking-wide text-primary flex items-center gap-2">
@@ -250,48 +260,44 @@ export default function Index() {
                           </div>
                         )}
 
-                        {result.data.recent_activity !== undefined && (
+                        {result.data.messages_received !== undefined && (
                           <div className="flex items-start gap-2">
                             <Icon name="MessageSquare" size={16} className="text-secondary mt-0.5" />
                             <div>
-                              <span className="text-xs font-medium text-muted-foreground block">Активность</span>
-                              <span className="text-sm font-semibold">{result.data.recent_activity} сообщений</span>
+                              <span className="text-xs font-medium text-muted-foreground block">Сообщений получено</span>
+                              <span className="text-sm font-semibold">{result.data.messages_received}</span>
                             </div>
                           </div>
                         )}
 
-                        {result.data.bot_info && (
-                          <>
-                            {result.data.bot_info.bot_username && (
-                              <div className="flex items-start gap-2">
-                                <Icon name="AtSign" size={16} className="text-primary mt-0.5" />
-                                <div>
-                                  <span className="text-xs font-medium text-muted-foreground block">Username бота</span>
-                                  <span className="text-sm font-semibold">@{result.data.bot_info.bot_username}</span>
-                                </div>
-                              </div>
-                            )}
+                        {result.data.bot_username && (
+                          <div className="flex items-start gap-2">
+                            <Icon name="AtSign" size={16} className="text-primary mt-0.5" />
+                            <div>
+                              <span className="text-xs font-medium text-muted-foreground block">Username бота</span>
+                              <span className="text-sm font-semibold">@{result.data.bot_username}</span>
+                            </div>
+                          </div>
+                        )}
 
-                            {result.data.bot_info.bot_name && (
-                              <div className="flex items-start gap-2">
-                                <Icon name="User" size={16} className="text-secondary mt-0.5" />
-                                <div>
-                                  <span className="text-xs font-medium text-muted-foreground block">Имя бота</span>
-                                  <span className="text-sm font-semibold">{result.data.bot_info.bot_name}</span>
-                                </div>
-                              </div>
-                            )}
+                        {result.data.bot_name && (
+                          <div className="flex items-start gap-2">
+                            <Icon name="User" size={16} className="text-secondary mt-0.5" />
+                            <div>
+                              <span className="text-xs font-medium text-muted-foreground block">Имя бота</span>
+                              <span className="text-sm font-semibold">{result.data.bot_name}</span>
+                            </div>
+                          </div>
+                        )}
 
-                            {result.data.bot_info.bot_id && (
-                              <div className="flex items-start gap-2">
-                                <Icon name="Hash" size={16} className="text-muted-foreground mt-0.5" />
-                                <div>
-                                  <span className="text-xs font-medium text-muted-foreground block">ID бота</span>
-                                  <code className="text-sm font-mono">{result.data.bot_info.bot_id}</code>
-                                </div>
-                              </div>
-                            )}
-                          </>
+                        {result.data.bot_id && (
+                          <div className="flex items-start gap-2">
+                            <Icon name="Hash" size={16} className="text-muted-foreground mt-0.5" />
+                            <div>
+                              <span className="text-xs font-medium text-muted-foreground block">ID бота</span>
+                              <code className="text-sm font-mono">{result.data.bot_id}</code>
+                            </div>
+                          </div>
                         )}
                       </div>
 
