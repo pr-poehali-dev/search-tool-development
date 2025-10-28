@@ -1,0 +1,38 @@
+{
+  "tests": [
+    {
+      "name": "Search by phone number",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "phoneNumber": "+79991234567"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "searchType": "phone"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Search by username",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "username": "@testuser"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "searchType": "username"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Handle OPTIONS for CORS",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    }
+  ]
+}
