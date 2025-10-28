@@ -5,10 +5,23 @@ import { Card } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 
+interface SearchResult {
+  source: string;
+  description: string;
+  query: string;
+  found: boolean;
+  data: {
+    search_term: string;
+    type: string;
+    timestamp: string;
+  };
+}
+
 export default function Index() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [username, setUsername] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const { toast } = useToast();
 
   const validatePhoneNumber = (phone: string): boolean => {
@@ -50,14 +63,42 @@ export default function Index() {
     }
 
     setIsSearching(true);
+    setSearchResults([]);
     
-    setTimeout(() => {
-      setIsSearching(false);
-      toast({
-        title: 'Поиск выполнен',
-        description: 'Результаты появятся здесь',
+    try {
+      const response = await fetch('https://functions.poehali.dev/05fb67f4-e315-4696-9660-751f59dcdd23', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          phoneNumber: phoneNumber,
+          username: username,
+        }),
       });
-    }, 1500);
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Ошибка при поиске');
+      }
+
+      if (data.success && data.results) {
+        setSearchResults(data.results);
+        toast({
+          title: 'Поиск выполнен',
+          description: `Найдено результатов: ${data.results.length}`,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Ошибка',
+        description: error instanceof Error ? error.message : 'Не удалось выполнить поиск',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   return (
@@ -146,24 +187,68 @@ export default function Index() {
           </div>
         </Card>
 
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-          {[
-            { icon: 'Zap', title: 'Быстро', desc: 'Результаты за секунды' },
-            { icon: 'Shield', title: 'Безопасно', desc: 'Полная конфиденциальность' },
-            { icon: 'Target', title: 'Точно', desc: 'Актуальные данные' }
-          ].map((feature, idx) => (
-            <Card 
-              key={idx}
-              className="p-6 text-center hover:shadow-xl transition-all duration-300 hover:scale-105 bg-gradient-to-br from-card to-muted/20 border-2 hover:border-primary/50"
-            >
-              <div className="inline-block p-3 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-2xl mb-4">
-                <Icon name={feature.icon as any} size={32} className="text-primary" />
-              </div>
-              <h3 className="font-bold text-lg mb-2">{feature.title}</h3>
-              <p className="text-sm text-muted-foreground">{feature.desc}</p>
-            </Card>
-          ))}
-        </div>
+        {searchResults.length > 0 && (
+          <div className="mt-12 space-y-4 animate-fade-in">
+            <h2 className="text-2xl font-bold text-center mb-6">Результаты поиска</h2>
+            {searchResults.map((result, idx) => (
+              <Card 
+                key={idx}
+                className="p-6 shadow-lg hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50 animate-scale-in"
+                style={{ animationDelay: `${idx * 0.1}s` }}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-xl">
+                    <Icon name="Database" size={24} className="text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="font-bold text-lg">@{result.source}</h3>
+                      {result.found && (
+                        <span className="px-2 py-1 bg-green-500/20 text-green-700 text-xs font-semibold rounded-full">
+                          Найдено
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-3">{result.description}</p>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Icon name="Search" size={16} className="text-primary" />
+                        <span className="font-medium">Запрос:</span>
+                        <code className="px-2 py-1 bg-muted rounded text-xs">{result.query}</code>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Icon name="Tag" size={16} className="text-secondary" />
+                        <span className="font-medium">Тип:</span>
+                        <span className="text-muted-foreground">{result.data.type === 'username' ? 'Username' : 'Номер телефона'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {searchResults.length === 0 && (
+          <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+            {[
+              { icon: 'Zap', title: 'Быстро', desc: 'Результаты за секунды' },
+              { icon: 'Shield', title: 'Безопасно', desc: 'Полная конфиденциальность' },
+              { icon: 'Target', title: 'Точно', desc: 'Актуальные данные' }
+            ].map((feature, idx) => (
+              <Card 
+                key={idx}
+                className="p-6 text-center hover:shadow-xl transition-all duration-300 hover:scale-105 bg-gradient-to-br from-card to-muted/20 border-2 hover:border-primary/50"
+              >
+                <div className="inline-block p-3 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-2xl mb-4">
+                  <Icon name={feature.icon as any} size={32} className="text-primary" />
+                </div>
+                <h3 className="font-bold text-lg mb-2">{feature.title}</h3>
+                <p className="text-sm text-muted-foreground">{feature.desc}</p>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

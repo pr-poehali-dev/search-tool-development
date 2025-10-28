@@ -1,0 +1,41 @@
+{
+  "tests": [
+    {
+      "name": "Test OPTIONS request for CORS",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedHeaders": {
+        "Access-Control-Allow-Origin": "*"
+      }
+    },
+    {
+      "name": "Test search by username",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "username": "@madefferg"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "results": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Test search by phone number",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "phoneNumber": "+79999999999"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "results": "array"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
