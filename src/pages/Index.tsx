@@ -118,14 +118,21 @@ export default function Index() {
           </p>
 
           <Button
-            onClick={() => {
-              const formElement = document.getElementById('search-form');
-              formElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }}
-            className="bg-gradient-to-r from-primary via-secondary to-accent hover:opacity-90 text-white font-bold px-8 py-6 text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+            onClick={handleSearch}
+            disabled={isSearching}
+            className="bg-gradient-to-r from-primary via-secondary to-accent hover:opacity-90 text-white font-bold px-8 py-6 text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Icon name="Rocket" size={24} className="mr-2" />
-            Начать пользоваться
+            {isSearching ? (
+              <>
+                <Icon name="Loader2" size={24} className="mr-2 animate-spin" />
+                Запуск ботов...
+              </>
+            ) : (
+              <>
+                <Icon name="Rocket" size={24} className="mr-2" />
+                Начать пользоваться
+              </>
+            )}
           </Button>
         </div>
 
