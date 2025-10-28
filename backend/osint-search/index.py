@@ -6,34 +6,54 @@ import time
 
 def search_phone_osint(phone: str) -> List[Dict[str, Any]]:
     '''Search phone number in open sources'''
-    results = []
+    # Очищаем номер для использования в URL
+    clean_phone = phone.replace('+', '').replace(' ', '').replace('-', '')
     
-    # Симуляция поиска в открытых источниках
     sources = [
         {
             'name': 'Социальные сети',
             'icon': 'Users',
             'data': {
-                'vk': f'Профиль ВКонтакте может быть связан с номером {phone}',
-                'telegram': f'Telegram аккаунт с номером {phone}',
-                'whatsapp': f'WhatsApp зарегистрирован на {phone}'
+                'VKontakte': {
+                    'text': f'Поиск по номеру {phone} в ВКонтакте',
+                    'url': f'https://vk.com/search?c[section]=people&c[q]={phone}'
+                },
+                'Telegram': {
+                    'text': f'Telegram аккаунт с номером {phone}',
+                    'url': f'https://t.me/{clean_phone}'
+                },
+                'WhatsApp': {
+                    'text': f'WhatsApp чат с номером {phone}',
+                    'url': f'https://wa.me/{clean_phone}'
+                }
             }
         },
         {
             'name': 'Мессенджеры',
             'icon': 'MessageCircle',
             'data': {
-                'viber': f'Viber: номер {phone} активен',
-                'signal': f'Signal: аккаунт найден'
+                'Viber': {
+                    'text': f'Viber: номер {phone}',
+                    'url': f'viber://chat?number={clean_phone}'
+                },
+                'Skype': {
+                    'text': f'Skype поиск по номеру',
+                    'url': f'skype:{clean_phone}?call'
+                }
             }
         },
         {
-            'name': 'Информация об операторе',
-            'icon': 'Phone',
+            'name': 'Поисковики',
+            'icon': 'Search',
             'data': {
-                'operator': 'Определение оператора связи',
-                'region': 'Регион регистрации номера',
-                'type': 'Тип номера (мобильный/стационарный)'
+                'Google': {
+                    'text': f'Поиск {phone} в Google',
+                    'url': f'https://www.google.com/search?q={urllib.parse.quote(phone)}'
+                },
+                'Yandex': {
+                    'text': f'Поиск {phone} в Яндекс',
+                    'url': f'https://yandex.ru/search/?text={urllib.parse.quote(phone)}'
+                }
             }
         }
     ]
@@ -42,8 +62,6 @@ def search_phone_osint(phone: str) -> List[Dict[str, Any]]:
 
 def search_username_osint(username: str) -> List[Dict[str, Any]]:
     '''Search username in open sources'''
-    results = []
-    
     # Очищаем username от @
     clean_username = username.lstrip('@')
     
@@ -52,29 +70,62 @@ def search_username_osint(username: str) -> List[Dict[str, Any]]:
             'name': 'Социальные сети',
             'icon': 'Users',
             'data': {
-                'telegram': f'@{clean_username} в Telegram',
-                'instagram': f'@{clean_username} в Instagram',
-                'twitter': f'@{clean_username} в Twitter/X',
-                'vk': f'{clean_username} в ВКонтакте',
-                'tiktok': f'@{clean_username} в TikTok'
+                'Telegram': {
+                    'text': f'@{clean_username} в Telegram',
+                    'url': f'https://t.me/{clean_username}'
+                },
+                'Instagram': {
+                    'text': f'@{clean_username} в Instagram',
+                    'url': f'https://instagram.com/{clean_username}'
+                },
+                'Twitter/X': {
+                    'text': f'@{clean_username} в Twitter/X',
+                    'url': f'https://twitter.com/{clean_username}'
+                },
+                'VKontakte': {
+                    'text': f'{clean_username} в ВКонтакте',
+                    'url': f'https://vk.com/{clean_username}'
+                },
+                'TikTok': {
+                    'text': f'@{clean_username} в TikTok',
+                    'url': f'https://tiktok.com/@{clean_username}'
+                }
             }
         },
         {
             'name': 'Профессиональные сети',
             'icon': 'Briefcase',
             'data': {
-                'linkedin': f'{clean_username} в LinkedIn',
-                'github': f'github.com/{clean_username}',
-                'habr': f'habr.com/ru/users/{clean_username}'
+                'LinkedIn': {
+                    'text': f'{clean_username} в LinkedIn',
+                    'url': f'https://linkedin.com/in/{clean_username}'
+                },
+                'GitHub': {
+                    'text': f'{clean_username} на GitHub',
+                    'url': f'https://github.com/{clean_username}'
+                },
+                'Habr': {
+                    'text': f'{clean_username} на Habr',
+                    'url': f'https://habr.com/ru/users/{clean_username}'
+                }
             }
         },
         {
             'name': 'Форумы и сообщества',
             'icon': 'MessageSquare',
             'data': {
-                'reddit': f'u/{clean_username} на Reddit',
-                'stackoverflow': f'{clean_username} на StackOverflow',
-                'discord': f'{clean_username} в Discord'
+                'Reddit': {
+                    'text': f'u/{clean_username} на Reddit',
+                    'url': f'https://reddit.com/user/{clean_username}'
+                },
+                'StackOverflow': {
+                    'text': f'{clean_username} на StackOverflow',
+                    'url': f'https://stackoverflow.com/users/{clean_username}'
+                },
+                'YouTube': {
+                    'text': f'@{clean_username} на YouTube',
+                    'url': f'https://youtube.com/@{clean_username}'
+                }
             }
         }
     ]

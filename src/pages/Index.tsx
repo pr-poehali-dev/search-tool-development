@@ -5,10 +5,15 @@ import { Card } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 
+interface OsintDataItem {
+  text: string;
+  url: string;
+}
+
 interface OsintSource {
   name: string;
   icon: string;
-  data: Record<string, string>;
+  data: Record<string, OsintDataItem>;
 }
 
 interface OsintResult {
@@ -24,6 +29,7 @@ export default function Index() {
   const [username, setUsername] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<OsintResult | null>(null);
+  const [searchHistory, setSearchHistory] = useState<OsintResult[]>([]);
   const { toast } = useToast();
 
   const validatePhoneNumber = (phone: string): boolean => {
@@ -87,6 +93,7 @@ export default function Index() {
 
       if (data.success && data.sources) {
         setSearchResults(data);
+        setSearchHistory(prev => [data, ...prev]);
         toast({
           title: 'Поиск выполнен',
           description: `Найдено источников: ${data.sources.length}`,
@@ -191,9 +198,27 @@ export default function Index() {
 
         {searchResults && searchResults.sources && (
           <div className="mt-12 space-y-6 animate-fade-in">
-            <h2 className="text-3xl font-bold text-center mb-8 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-              Найденная информация
-            </h2>
+            <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+                Результаты поиска
+              </h2>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-lg">
+                  <Icon name="Search" size={18} className="text-primary" />
+                  <span className="font-semibold text-sm">{searchResults.query}</span>
+                </div>
+                {searchHistory.length > 1 && (
+                  <Button
+                    onClick={() => setSearchResults(null)}
+                    variant="outline"
+                    className="gap-2"
+                  >
+                    <Icon name="ArrowLeft" size={16} />
+                    История
+                  </Button>
+                )}
+              </div>
+            </div>
             {searchResults.sources.map((source, idx) => (
               <Card 
                 key={idx}
@@ -212,13 +237,19 @@ export default function Index() {
 
                   <div className="bg-muted/30 rounded-lg p-5 space-y-3">
                     {Object.entries(source.data).map(([key, value], dataIdx) => (
-                      <div key={dataIdx} className="flex items-start gap-3 p-3 bg-background rounded-md border border-border">
-                        <Icon name="CheckCircle2" size={16} className="text-green-600 mt-0.5 flex-shrink-0" />
+                      <a 
+                        key={dataIdx} 
+                        href={value.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-start gap-3 p-3 bg-background rounded-md border border-border hover:border-primary/50 hover:bg-primary/5 transition-all duration-200 group cursor-pointer"
+                      >
+                        <Icon name="ExternalLink" size={16} className="text-primary mt-0.5 flex-shrink-0 group-hover:scale-110 transition-transform" />
                         <div className="flex-1">
                           <span className="text-xs font-medium text-muted-foreground block mb-1 uppercase tracking-wide">{key}</span>
-                          <p className="text-sm text-foreground">{value}</p>
+                          <p className="text-sm text-foreground group-hover:text-primary transition-colors">{value.text}</p>
                         </div>
-                      </div>
+                      </a>
                     ))}
                   </div>
                 </div>
@@ -227,7 +258,7 @@ export default function Index() {
           </div>
         )}
 
-        {!searchResults && (
+        {!searchResults && searchHistory.length === 0 && (
           <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in" style={{ animationDelay: '0.2s' }}>
             {[
               { icon: 'Zap', title: 'Быстро', desc: 'Результаты за секунды' },
@@ -245,6 +276,38 @@ export default function Index() {
                 <p className="text-sm text-muted-foreground">{feature.desc}</p>
               </Card>
             ))}
+          </div>
+        )}
+
+        {searchHistory.length > 0 && !searchResults && (
+          <div className="mt-12 space-y-6 animate-fade-in">
+            <h2 className="text-2xl font-bold text-center mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              История поиска
+            </h2>
+            <div className="space-y-4">
+              {searchHistory.map((historyItem, idx) => (
+                <Card 
+                  key={idx}
+                  onClick={() => setSearchResults(historyItem)}
+                  className="p-4 hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50 cursor-pointer group"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-lg">
+                        <Icon name="History" size={20} className="text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-semibold group-hover:text-primary transition-colors">{historyItem.query}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(historyItem.timestamp * 1000).toLocaleString('ru-RU')}
+                        </p>
+                      </div>
+                    </div>
+                    <Icon name="ChevronRight" size={20} className="text-muted-foreground group-hover:text-primary transition-colors" />
+                  </div>
+                </Card>
+              ))}
+            </div>
           </div>
         )}
       </div>
