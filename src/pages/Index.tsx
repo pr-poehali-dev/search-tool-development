@@ -227,7 +227,7 @@ export default function Index() {
           </div>
         )}
 
-        {searchResults.length === 0 && (
+        {!searchResults && (
           <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in" style={{ animationDelay: '0.2s' }}>
             {[
               { icon: 'Zap', title: 'Быстро', desc: 'Результаты за секунды' },
