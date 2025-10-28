@@ -188,41 +188,123 @@ export default function Index() {
         </Card>
 
         {searchResults.length > 0 && (
-          <div className="mt-12 space-y-4 animate-fade-in">
-            <h2 className="text-2xl font-bold text-center mb-6">Результаты поиска</h2>
+          <div className="mt-12 space-y-6 animate-fade-in">
+            <h2 className="text-3xl font-bold text-center mb-8 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+              Найденная информация
+            </h2>
             {searchResults.map((result, idx) => (
               <Card 
                 key={idx}
-                className="p-6 shadow-lg hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50 animate-scale-in"
+                className="p-6 md:p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border-2 hover:border-primary/50 animate-scale-in"
                 style={{ animationDelay: `${idx * 0.1}s` }}
               >
-                <div className="flex items-start gap-4">
-                  <div className="p-3 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-xl">
-                    <Icon name="Database" size={24} className="text-primary" />
+                <div className="space-y-4">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-xl">
+                      <Icon name="Bot" size={28} className="text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2 flex-wrap">
+                        <h3 className="font-bold text-xl">@{result.source}</h3>
+                        {result.found ? (
+                          <span className="px-3 py-1 bg-green-500/20 text-green-700 text-xs font-semibold rounded-full flex items-center gap-1">
+                            <Icon name="CheckCircle2" size={14} />
+                            Найдено
+                          </span>
+                        ) : (
+                          <span className="px-3 py-1 bg-red-500/20 text-red-700 text-xs font-semibold rounded-full flex items-center gap-1">
+                            <Icon name="XCircle" size={14} />
+                            Не найдено
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-4">{result.description}</p>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="font-bold text-lg">@{result.source}</h3>
-                      {result.found && (
-                        <span className="px-2 py-1 bg-green-500/20 text-green-700 text-xs font-semibold rounded-full">
-                          Найдено
-                        </span>
+
+                  {result.data && Object.keys(result.data).length > 0 && (
+                    <div className="bg-muted/30 rounded-lg p-4 space-y-3">
+                      <h4 className="font-semibold text-sm uppercase tracking-wide text-primary flex items-center gap-2">
+                        <Icon name="FileText" size={16} />
+                        Данные
+                      </h4>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {result.data.search_term && (
+                          <div className="flex items-start gap-2">
+                            <Icon name="Search" size={16} className="text-primary mt-0.5" />
+                            <div>
+                              <span className="text-xs font-medium text-muted-foreground block">Запрос</span>
+                              <code className="text-sm font-mono bg-background px-2 py-1 rounded">{result.data.search_term}</code>
+                            </div>
+                          </div>
+                        )}
+
+                        {result.data.status && (
+                          <div className="flex items-start gap-2">
+                            <Icon name="Activity" size={16} className="text-green-600 mt-0.5" />
+                            <div>
+                              <span className="text-xs font-medium text-muted-foreground block">Статус</span>
+                              <span className="text-sm font-semibold text-green-600">{result.data.status}</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {result.data.recent_activity !== undefined && (
+                          <div className="flex items-start gap-2">
+                            <Icon name="MessageSquare" size={16} className="text-secondary mt-0.5" />
+                            <div>
+                              <span className="text-xs font-medium text-muted-foreground block">Активность</span>
+                              <span className="text-sm font-semibold">{result.data.recent_activity} сообщений</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {result.data.bot_info && (
+                          <>
+                            {result.data.bot_info.bot_username && (
+                              <div className="flex items-start gap-2">
+                                <Icon name="AtSign" size={16} className="text-primary mt-0.5" />
+                                <div>
+                                  <span className="text-xs font-medium text-muted-foreground block">Username бота</span>
+                                  <span className="text-sm font-semibold">@{result.data.bot_info.bot_username}</span>
+                                </div>
+                              </div>
+                            )}
+
+                            {result.data.bot_info.bot_name && (
+                              <div className="flex items-start gap-2">
+                                <Icon name="User" size={16} className="text-secondary mt-0.5" />
+                                <div>
+                                  <span className="text-xs font-medium text-muted-foreground block">Имя бота</span>
+                                  <span className="text-sm font-semibold">{result.data.bot_info.bot_name}</span>
+                                </div>
+                              </div>
+                            )}
+
+                            {result.data.bot_info.bot_id && (
+                              <div className="flex items-start gap-2">
+                                <Icon name="Hash" size={16} className="text-muted-foreground mt-0.5" />
+                                <div>
+                                  <span className="text-xs font-medium text-muted-foreground block">ID бота</span>
+                                  <code className="text-sm font-mono">{result.data.bot_info.bot_id}</code>
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+
+                      {result.error && (
+                        <div className="mt-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                          <div className="flex items-center gap-2 text-red-700">
+                            <Icon name="AlertCircle" size={16} />
+                            <span className="text-sm font-medium">{result.error}</span>
+                          </div>
+                        </div>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground mb-3">{result.description}</p>
-                    <div className="space-y-1 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Icon name="Search" size={16} className="text-primary" />
-                        <span className="font-medium">Запрос:</span>
-                        <code className="px-2 py-1 bg-muted rounded text-xs">{result.query}</code>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Icon name="Tag" size={16} className="text-secondary" />
-                        <span className="font-medium">Тип:</span>
-                        <span className="text-muted-foreground">{result.data.type === 'username' ? 'Username' : 'Номер телефона'}</span>
-                      </div>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </Card>
             ))}
