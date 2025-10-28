@@ -4,6 +4,61 @@ import urllib.request
 import urllib.parse
 import time
 
+def search_phone_closed_sources(phone: str) -> List[Dict[str, Any]]:
+    '''Search phone number in closed/leaked databases'''
+    clean_phone = phone.replace('+', '').replace(' ', '').replace('-', '')
+    
+    sources = [
+        {
+            'name': 'Утечки и базы данных',
+            'icon': 'Database',
+            'data': {
+                'GetContact': {
+                    'text': f'Поиск в GetContact - определитель номера',
+                    'url': f'https://getcontact.com/ru/search?number={clean_phone}'
+                },
+                'Truecaller': {
+                    'text': f'Поиск в Truecaller - база номеров',
+                    'url': f'https://www.truecaller.com/search/ru/{clean_phone}'
+                },
+                'NumBuster': {
+                    'text': f'Проверка в NumBuster - база утечек',
+                    'url': f'https://numbuster.com/number/{clean_phone}'
+                }
+            }
+        },
+        {
+            'name': 'Проверка в базах утечек',
+            'icon': 'AlertTriangle',
+            'data': {
+                'LeakCheck': {
+                    'text': f'Проверка номера {phone} в базах утечек',
+                    'url': f'https://leakcheck.net/search?query={phone}'
+                },
+                'HaveIBeenPwned': {
+                    'text': f'Проверка на наличие в утечках данных',
+                    'url': f'https://haveibeenpwned.com/'
+                }
+            }
+        },
+        {
+            'name': 'Информация об операторе',
+            'icon': 'Phone',
+            'data': {
+                'NumberingPlans': {
+                    'text': f'Определение оператора и региона для {phone}',
+                    'url': f'https://www.numberingplans.com/?page=analysis&sub=phonenr&phonenr={clean_phone}'
+                },
+                'PhoneInfoga': {
+                    'text': f'Детальная информация о номере',
+                    'url': f'https://sundowndev.github.io/phoneinfoga/'
+                }
+            }
+        }
+    ]
+    
+    return sources
+
 def search_phone_osint(phone: str) -> List[Dict[str, Any]]:
     '''Search phone number in open sources'''
     # Очищаем номер для использования в URL
@@ -53,6 +108,65 @@ def search_phone_osint(phone: str) -> List[Dict[str, Any]]:
                 'Yandex': {
                     'text': f'Поиск {phone} в Яндекс',
                     'url': f'https://yandex.ru/search/?text={urllib.parse.quote(phone)}'
+                }
+            }
+        }
+    ]
+    
+    return sources
+
+def search_username_closed_sources(username: str) -> List[Dict[str, Any]]:
+    '''Search username in closed/leaked databases'''
+    clean_username = username.lstrip('@')
+    
+    sources = [
+        {
+            'name': 'Базы утечек данных',
+            'icon': 'Database',
+            'data': {
+                'LeakCheck': {
+                    'text': f'Поиск @{clean_username} в базах утечек',
+                    'url': f'https://leakcheck.net/search?query={clean_username}'
+                },
+                'Dehashed': {
+                    'text': f'Проверка username в Dehashed',
+                    'url': f'https://dehashed.com/search?query={clean_username}'
+                },
+                'IntelX': {
+                    'text': f'Поиск в Intelligence X (даркнет)',
+                    'url': f'https://intelx.io/?s={clean_username}'
+                }
+            }
+        },
+        {
+            'name': 'OSINT инструменты',
+            'icon': 'Shield',
+            'data': {
+                'Sherlock': {
+                    'text': f'Sherlock - поиск username по 300+ сайтам',
+                    'url': f'https://sherlock-project.github.io/'
+                },
+                'WhatsMyName': {
+                    'text': f'WhatsMyName - проверка занятости username',
+                    'url': f'https://whatsmyname.app/'
+                },
+                'Namechk': {
+                    'text': f'Проверка {clean_username} на всех платформах',
+                    'url': f'https://namechk.com/search/?q={clean_username}'
+                }
+            }
+        },
+        {
+            'name': 'Специализированные базы',
+            'icon': 'Search',
+            'data': {
+                'Pipl': {
+                    'text': f'Поиск персональных данных в закрытых источниках',
+                    'url': f'https://pipl.com/search/?q={clean_username}'
+                },
+                'Spokeo': {
+                    'text': f'Проверка в базе Spokeo (закрытая база США)',
+                    'url': f'https://www.spokeo.com/{clean_username}'
                 }
             }
         }
@@ -187,11 +301,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         search_query = ''
         
         if phone_number:
-            results = search_phone_osint(phone_number)
+            open_sources = search_phone_osint(phone_number)
+            closed_sources = search_phone_closed_sources(phone_number)
+            results = open_sources + closed_sources
             search_type = 'phone'
             search_query = phone_number
         elif username:
-            results = search_username_osint(username)
+            open_sources = search_username_osint(username)
+            closed_sources = search_username_closed_sources(username)
+            results = open_sources + closed_sources
             search_type = 'username'
             search_query = username
         
